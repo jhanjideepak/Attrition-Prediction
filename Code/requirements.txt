@@ -1,0 +1,15 @@
+flask
+numpy
+scipy
+pandas
+matplotlib
+pickle-mixin
+sklearn
+statistics
+xgboost
+requests
+responses
+gunicorn
+gevent
+flask_cors
+lifelines
