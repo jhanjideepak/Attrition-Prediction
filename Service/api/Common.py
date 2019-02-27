@@ -18,6 +18,8 @@ if local:
     survival_duration_col = "YearsAtCompany"
     survival_event_col = "Attrition_numerical"
     attritionimportantfeatures="Data/attrition_importantfeatures.pkl"
+    features_default_values ="Data/features_def_values.pkl"
+
 
 else:
     datafile = "/home/howathon/api/Data/attrition.csv"
@@ -30,6 +32,7 @@ else:
     survival_duration_col = "YearsAtCompany"
     survival_event_col = "Attrition_numerical"
     attritionimportantfeatures="/home/howathon/api/Data/attrition_importantfeatures.pkl"
+    features_default_values ="/home/howathon/api/Data/features_def_values.pkl"
 
 
 

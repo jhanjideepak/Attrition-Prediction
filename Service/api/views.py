@@ -2,7 +2,7 @@
 """
 Created on Tue Jul 03 10:57:33 2018
 
-@author: pavchemp
+@author: Paviya. Utkarsh
 """
 
 #from flask import render_template,Request
@@ -18,8 +18,8 @@ import requests
 dir = "D:\\Howathon\\Code"
 #os.chdir(dir)
 from flask_cors import CORS
-from Attrition_Predition import GetAttritionPredictions, TrainAttritionPreditorModel
-from api.Survival_Analysis import PredictSurvivalFunction
+from Attrition_Predition import GetAttritionPredictions, TrainAttritionPreditorModel,GetAttritionPredictionswithreason
+from Survival_Analysis import PredictSurvivalFunction
 from Data_Access import LoadData, StoreData, LoadPickle
 import Common as cm
 from flask import Flask
@@ -66,7 +66,22 @@ def GetAttritionPrediction():
     except Exception as e:
         raise e
         abort(500)          
-                
+
+@app.route("/GetAttritionPredictionwithreason" , methods=['POST'])                
+def GetAttritionPredictionwithreason():
+    try:
+        data = request.get_json(force = True)
+        #postreqdata = json.loads(data)
+        #print(data)
+        df = pd.DataFrame(data)
+        print(df.columns)
+        pred = GetAttritionPredictionswithreason(df)
+        out_json = pred.to_json(orient="records")
+        #print(pred)
+        return out_json#json.dumps(pred.tolist())
+    except Exception as e:
+        raise e
+        abort(500)                         
         
 
 @app.route("/GetDashboardData" , methods=['GET'])

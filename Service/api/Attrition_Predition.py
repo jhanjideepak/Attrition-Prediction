@@ -190,3 +190,81 @@ def GetAttritionPredictions(df):
     y_pred, y_prob = predict_data(model, df[X])
     return y_prob
 
+
+
+def GetAttritionPredictionswithreason(df):
+    df = clean_data_forprediction(df) # File name should be given manually
+    # Call Process Data Function
+    df = process_data(df)
+    # Removing the Target variable and storing ather column names
+    if (df.columns.contains(cm.target_col)):
+        df = df.drop(cm.target_col, axis=1)
+    X = list(df.columns)
+    # Splitting the Data
+    model = model_load(name_model)
+    # Predicting with model
+    #print(df.columns)
+    y_pred, y_prob = predict_data(model, df[X])
+    df["Attrition"] = y_pred
+    df["Probability"] = y_prob
+    df["ProbableReason"] = df.apply(GetProbableReasons, axis = 1)
+    select = ["Probability","Attrition","ProbableReason"]
+    df["Probability"] = df['Probability'].apply(lambda x:round(x,2))
+    df["Attrition"] = df['Attrition'].apply(lambda x:"Yes" if x==1 else "No")
+    return df[select]
+
+
+
+# In[77]:
+
+def GetAverageValuesForImportantFeatures(df):
+    imp_feat = LoadPickle(cm.attritionimportantfeatures)
+    top_feat = pd.DataFrame(imp_feat.head(10))
+    print(top_feat)
+    top_feat = top_feat.reset_index()
+    top_feat.columns = ['feature_name','p']
+    top_feat["avg_value"] = 0
+    top_feat["std_dev"] = 0
+    values = []
+    df_n = df[df.Attrition_Yes==1]
+    df = df[df.Attrition_Yes==0]
+    for eachfeat in top_feat.feature_name:
+        print(eachfeat)
+        avg = df[eachfeat].median()
+        top_feat.at[top_feat["feature_name"]==eachfeat,"avg_value"] = avg
+        top_feat.at[top_feat["feature_name"]==eachfeat,"std_dev"] = df[eachfeat].std()
+        top_feat.at[top_feat["feature_name"]==eachfeat,"attrition_avg_value"] = df_n[eachfeat].median()
+        top_feat.at[top_feat["feature_name"]==eachfeat,"attrition_std_dev"] = df_n[eachfeat].std()
+
+    return top_feat
+
+
+# In[77]:
+
+def GetProbableReasons(row):
+    reason_feat = ""
+    if row["Attrition"] == 1:
+        imp_feat_val = LoadPickle(cm.features_default_values)
+        imp_feat_val["current_val"] = 0
+        imp_feat_val["distance"] = 0
+        for eachfeat in imp_feat_val.feature_name:
+            if row.index.contains(eachfeat):
+                row_val = row[eachfeat]
+                imp_feat_val.at[imp_feat_val["feature_name"]==eachfeat,"current_val"] = row_val
+                feat_avg_val = imp_feat_val[imp_feat_val["feature_name"]==eachfeat].avg_value.values[0]
+                feat_stddev = imp_feat_val[imp_feat_val["feature_name"]==eachfeat].std_dev.values[0]  
+                attr_avg_val = imp_feat_val[imp_feat_val["feature_name"]==eachfeat].attrition_avg_value.values[0]
+                distance_1 = np.sqrt(np.square( row_val - feat_avg_val))
+                distance_2 = np.sqrt(np.square(row_val-attr_avg_val))
+                min_dist = min([distance_1, distance_2])
+                if (min_dist == distance_2):
+                    imp_feat_val.at[imp_feat_val["feature_name"]==eachfeat,"distance"] =min_dist
+                
+            
+        imp_feat_val['temp']= imp_feat_val['distance']/imp_feat_val['attrition_std_dev']
+        
+        reason_feat = imp_feat_val[imp_feat_val["temp"]==max(imp_feat_val['temp'])].feature_name.values[0]
+    return reason_feat 
+            
+        
+ 
